@@ -34,6 +34,8 @@ public class WordCount {
 
     private void countWordsInLine(String bookTitle, String line) {
         for (String word : line.split(" ")) {
+            //TODO: Also need to increment the title-specific values
+            //TODO: Strip off punctuation at front or end of word? 'cliff!' should count as 'cliff', yes?
             incrementCountForWord(word);
         }
     }
@@ -57,6 +59,7 @@ public class WordCount {
         //TODO: Hide the session detail at a minimum
         ResultSet results = getSession().execute("SELECT * FROM total_word_counts");
 
+        //TODO: Limit to 10 words
         for (Row row : results) {
             String word = row.getString("word_name");
             Integer count = (int)row.getLong("counter_value");

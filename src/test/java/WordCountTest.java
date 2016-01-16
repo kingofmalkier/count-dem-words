@@ -67,6 +67,30 @@ public class WordCountTest {
     }
 
     @Test
+    public void topTenOnlyAcrossAllTitles() {
+        WordCount wc = new WordCount();
+
+        Vector<String> basicLines = new Vector<>();
+        basicLines.add("This is my first line this is fun");
+        basicLines.add("Oh my word there are more lines");
+
+        wc.countWords("Basic", basicLines);
+
+        basicLines.add("Addendum groovy is groovy groovy too");
+
+        wc.countWords("Basic 2nd Edition", basicLines);
+
+        Map<String, Integer> topTen = wc.topTenWords();
+
+        Integer thisCount = topTen.get("this");
+        Integer groovyCount = topTen.get("groovy");
+
+        assertEquals(10, topTen.size());
+        assertEquals(Integer.valueOf(4), thisCount);
+        assertEquals(Integer.valueOf(3), groovyCount);
+    }
+
+    @Test
     public void topTenOnlyFromOneTitle() {
         Vector<String> linesWeCareAbout = new Vector<>();
         linesWeCareAbout.add("Cool words we care about");
