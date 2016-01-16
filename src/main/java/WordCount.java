@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.Map;
 
 /** A service that counts words in books. */
@@ -19,7 +20,7 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords() {
-        return null;
+        return new HashMap<String, Integer>();
     }
 
     /**
