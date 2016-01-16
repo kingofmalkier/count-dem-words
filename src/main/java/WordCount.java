@@ -1,8 +1,17 @@
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Session;
+
 import java.util.HashMap;
 import java.util.Map;
 
+
+
 /** A service that counts words in books. */
 public class WordCount {
+    private Session session;
+
     /**
      * Count all words in a given book in preparation for later querying.
      *
@@ -35,7 +44,19 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords() {
-        return new HashMap<>();
+        Map<String, Integer> topTenMap = new HashMap<>();
+
+        //TODO: Hide the session detail at a minimum
+        ResultSet results = getSession().execute("SELECT * FROM total_word_counts");
+
+        for (Row row : results) {
+            String word = row.getString("word_name");
+            Integer count = (int)row.getLong("counter_value");
+
+            topTenMap.put(word, count);
+        }
+
+        return topTenMap;
     }
 
     /**
@@ -52,5 +73,19 @@ public class WordCount {
         }
 
         return new HashMap<>();
+    }
+
+    private Session getSession() {
+        if (session == null) {
+            session = connect("127.0.0.1");
+        }
+
+        return session;
+    }
+
+    private Session connect(String node) {
+        return Cluster.builder()
+                .addContactPoint(node).withPort(9142)
+                .build().connect("wordsKS"); //TODO: Hardcoded?
     }
 }

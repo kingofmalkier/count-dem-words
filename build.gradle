@@ -6,4 +6,8 @@ repositories {
 
 dependencies {
     testCompile 'junit:junit:4.12'
+    testCompile 'org.cassandraunit:cassandra-unit:2.2.2.1'
+    compile 'com.datastax.cassandra:cassandra-driver-core:2.1.9'
+    compile 'io.netty:netty-common:4.0.33.Final'
+    testCompile 'org.slf4j:slf4j-nop:1.7.13' //TODO: Correct configuration?
 }

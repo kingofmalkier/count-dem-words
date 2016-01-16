@@ -1,15 +1,52 @@
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.junit.Rule;
-import org.junit.Test;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Session;
+import org.apache.thrift.transport.TTransportException;
+import org.cassandraunit.CQLDataLoader;
+import org.cassandraunit.CassandraCQLUnit;
+import org.cassandraunit.CassandraUnit;
+import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
+import org.cassandraunit.dataset.yaml.ClassPathYamlDataSet;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
 import java.util.Vector;
 
 public class WordCountTest {
     @Rule
     public final ExpectedException exceptionRule = ExpectedException.none();
+
+    @Rule
+    public CassandraCQLUnit cassandraCQLUnit = new CassandraCQLUnit(new ClassPathCQLDataSet("simple.cql","wordsKS"));
+
+    @BeforeClass
+    public static void onlyOnce() throws InterruptedException, IOException, TTransportException {
+        //EmbeddedCassandraServerHelper.startEmbeddedCassandra();
+    }
+
+    @AfterClass
+    public static void onlyOnceCleanup() {
+        /*
+         * The library declares this function is deprecated because it only partially works,
+         * but doesn't provide an alternative. For now we'll just call this?
+         */
+        //EmbeddedCassandraServerHelper.stopEmbeddedCassandra();
+    }
+
+    @After
+    public void afterTest() {
+        //EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+    }
+
+//    @Test
+//    public void cassandraTryout() {
+//        ResultSet result = cassandraCQLUnit.session.execute("select * from mytable WHERE id='myKey01'");
+//        assertEquals(result.iterator().next().getString("value"), "myValue01");
+//    }
 
     @Test
     public void ultraTrivialTest() {
