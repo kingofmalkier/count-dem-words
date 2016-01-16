@@ -20,7 +20,7 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords() {
-        return new HashMap<String, Integer>();
+        return new HashMap<>();
     }
 
     /**
@@ -32,6 +32,6 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords(String bookTitle) {
-        return null;
+        return new HashMap<>();
     }
 }
