@@ -14,6 +14,7 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Vector;
 
 public class WordCountTest {
@@ -49,15 +50,20 @@ public class WordCountTest {
 //    }
 
     @Test
-    public void ultraTrivialTest() {
+    public void prettyTrivialTest() {
         Vector<String> ultraTrivalLines = new Vector<>();
         ultraTrivalLines.add("This is my only line this is fun");
 
         WordCount wc = new WordCount();
         wc.countWords("Trivial", ultraTrivalLines);
 
-        Integer thisCount = wc.topTenWords().get("this");
+        Map<String, Integer> topTen = wc.topTenWords();
+
+        Integer thisCount = topTen.get("this");
+        Integer funCount = topTen.get("fun");
+
         assertEquals(Integer.valueOf(2), thisCount);
+        assertEquals(Integer.valueOf(1), funCount);
     }
 
     @Test

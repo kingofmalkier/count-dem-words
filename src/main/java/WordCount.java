@@ -28,12 +28,20 @@ public class WordCount {
         }
 
         for (String line : lines) {
-            countWordsInLine(bookTitle, line);
+            countWordsInLine(bookTitle, line.toLowerCase());
         }
     }
 
     private void countWordsInLine(String bookTitle, String line) {
+        for (String word : line.split(" ")) {
+            incrementCountForWord(word);
+        }
+    }
 
+    private void incrementCountForWord(String word) {
+        getSession().execute("UPDATE total_word_counts\n" +
+                " SET counter_value = counter_value + 1\n" +
+                " WHERE word_name='" + word + "';");
     }
 
     /**
