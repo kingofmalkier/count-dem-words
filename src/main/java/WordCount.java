@@ -10,6 +10,21 @@ public class WordCount {
      * @param lines     The book's text. Must not be null.
      */
     public void countWords(String bookTitle, Iterable<String> lines) {
+        if (bookTitle == null || bookTitle.isEmpty()) {
+            throw new IllegalArgumentException("The book's title must be a non-empty String.");
+        }
+
+        if (lines == null) {
+            throw new IllegalArgumentException("Lines must not be null.");
+        }
+
+        for (String line : lines) {
+            countWordsInLine(bookTitle, line);
+        }
+    }
+
+    private void countWordsInLine(String bookTitle, String line) {
+
     }
 
     /**
@@ -32,6 +47,10 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords(String bookTitle) {
+        if (bookTitle == null || bookTitle.isEmpty()) {
+            throw new IllegalArgumentException("The book's title must be a non-empty String.");
+        }
+
         return new HashMap<>();
     }
 }

@@ -1,9 +1,16 @@
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.Vector;
 
 public class WordCountTest {
+    @Rule
+    public final ExpectedException exceptionRule = ExpectedException.none();
+
     @Test
     public void ultraTrivialTest() {
         Vector<String> ultraTrivalLines = new Vector<>();
@@ -31,5 +38,35 @@ public class WordCountTest {
 
         Integer coolCount = wc.topTenWords("We Care").get("cool");
         assertEquals(Integer.valueOf(2), coolCount);
+    }
+
+    @Test
+    public void countNullTitle() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        new WordCount().countWords(null, new Vector<String>());
+    }
+
+    @Test
+    public void countEmptyTitle() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        new WordCount().countWords("", new Vector<String>());
+    }
+
+    @Test
+    public void countNullLines() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        new WordCount().countWords("Neat Title", null);
+    }
+
+    @Test
+    public void topTenNullTitle() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        new WordCount().topTenWords(null);
+    }
+
+    @Test
+    public void topTenEmptyTitle() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        new WordCount().topTenWords("");
     }
 }
