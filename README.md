@@ -4,7 +4,7 @@ Assumptions:
 * We don't care about capitilization of the words
 * A "contender" must surpass the count of an existing top-ten word to make the top-ten
 * Loading datasets for unit tests could make the test more isolated, but makes tests more fragile regarding changes to data format
-*
+* Currently each test in WordCountTest runs with Cassandra, this could be changed for speed but for ease-of-code-review's sake I will leave it
 
 Design to implement:
 * Track word counts by title and across titles separately
