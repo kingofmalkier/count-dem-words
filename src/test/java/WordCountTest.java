@@ -84,10 +84,12 @@ public class WordCountTest {
 
         Integer thisCount = topTen.get("this");
         Integer groovyCount = topTen.get("groovy");
+        Integer isCount = topTen.get("is");
 
         assertEquals(10, topTen.size());
         assertEquals(Integer.valueOf(4), thisCount);
         assertEquals(Integer.valueOf(3), groovyCount);
+        assertEquals(Integer.valueOf(5), isCount);
     }
 
     @Test

@@ -67,36 +67,54 @@ public class WordCount {
             numRowsInTopTen = (int)row.getLong(0);
         }
 
+        String wordToReplace = findWordToReplace(word, currentCount);
+
+        //If there are less than 10 in the top ten then we *are* adding
         if (numRowsInTopTen < 10) {
-            /*
-             *TODO: This is doing replaces even when the word is already present.
-             * Most importantly, it's doing the delete part, so we usually end up with
-             * multiple rows of one word, and some get deleted. When we collect those into
-             * a hash map the duplicates overwrite each other and that's why 7 instead of 10
-             * Need to be more clever about getting the entire top ten and passing through it once,
-             * retaining the lowest word's name and also checking for ourselves.
-             * If we find ourselves we need to delete ourselves and readd with a higher number
-             */
-            replaceTopTen(null, word, currentCount);
-            return;
-        }
-
-        results = getSession().execute("SELECT * FROM top_ten_words WHERE count > " + currentCount + " ALLOW FILTERING;");
-
-        for (Row row : results) {
-            if (currentCount > row.getInt("count")) {
-                replaceTopTen(row.getString("word_name"), word, currentCount);
+            if (wordToReplace == null) {
+                addToTopTen(word, currentCount);
+            } else if (wordToReplace.equals(word)) {
+                replaceTopTen(wordToReplace, word, currentCount);
+            } else {
+                addToTopTen(word, currentCount);
             }
+        } else if (wordToReplace != null) {
+            replaceTopTen(wordToReplace, word, currentCount);
         }
     }
 
-    private void replaceTopTen(String oldWord, String newWord, long count) {
-        if (oldWord != null) {
-            getSession().execute("DELETE FROM top_ten_words where word_name = '" + oldWord + "';");
+    private String findWordToReplace(String word, long currentCount) {
+        String wordToReplace = null;
+        ResultSet results = getSession().execute("SELECT * FROM top_ten_words WHERE count < " + currentCount + " ALLOW FILTERING;");
+
+        for (Row row : results) {
+            String rowWord = row.getString("word_name");
+            if (word.equals(rowWord)) {
+                return word;
+            }
+
+            int rowCount = row.getInt("count");
+            if (rowCount > currentCount) {
+                return wordToReplace;
+            }
+
+            if (wordToReplace == null && currentCount > rowCount) {
+                wordToReplace = rowWord;
+            }
         }
 
+        return wordToReplace;
+    }
+
+    private void replaceTopTen(String oldWord, String newWord, long count) {
+        getSession().execute("DELETE FROM top_ten_words where word_name = '" + oldWord + "';");
+
+        addToTopTen(newWord, count);
+    }
+
+    private void addToTopTen(String word, long count) {
         getSession().execute("INSERT INTO top_ten_words (word_name, count)\n" +
-                " VALUES ('" + newWord + "', " + count + ");");
+                " VALUES ('" + word + "', " + count + ");");
     }
 
     /**
