@@ -12,6 +12,7 @@ import java.util.Map;
 /** A service that counts words in books. */
 public class WordCount {
     private Session session;
+    private static final String GRAND_TOTAL = "----grand-total----";
 
     /**
      * Count all words in a given book in preparation for later querying.
@@ -61,11 +62,20 @@ public class WordCount {
     }
 
     private void updateTopTen(String word, long currentCount) {
-        ResultSet results = getSession().execute("SELECT COUNT(*) FROM top_ten_words;");
-        int numRowsInTopTen = 0;
-        for (Row row : results) {
-            numRowsInTopTen = (int)row.getLong(0);
+        String title = GRAND_TOTAL;
+        ResultSet results = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + title + "';");
+        if (results.isExhausted()) {
+            //We don't have any entry yet for this title
+            //so we can just skip straight to creating an entry for this title/word
+            addNewTitleWithWordCount(title, word, currentCount);
+            return;
         }
+
+        //TODO: Time to get our map, which is the actual count data, from there it may actually be sort of similar
+        //to the old implementation?
+
+        int numRowsInTopTen = 0;
+        Map <String, Integer> countMap = results.one().getMap("counts", String.class, Integer.class);
 
         String wordToReplace = findWordToReplace(word, currentCount);
 
@@ -81,6 +91,13 @@ public class WordCount {
         } else if (wordToReplace != null) {
             replaceTopTen(wordToReplace, word, currentCount);
         }
+    }
+
+    private void addNewTitleWithWordCount(String title, String word, long currentCount) {
+        getSession().execute("UPDATE top_ten_words\n" +
+                "  SET counts =\n" +
+                "  { '" + word + "' : " + currentCount + " }\n" +
+                "  WHERE title = '" + title + "';");
     }
 
     private String findWordToReplace(String word, long currentCount) {
@@ -107,14 +124,16 @@ public class WordCount {
     }
 
     private void replaceTopTen(String oldWord, String newWord, long count) {
-        getSession().execute("DELETE FROM top_ten_words where word_name = '" + oldWord + "';");
+        String title = "";
+        getSession().execute("DELETE FROM top_ten_words where word_name = '" + oldWord + "' AND title = '" + title + "';");
 
         addToTopTen(newWord, count);
     }
 
     private void addToTopTen(String word, long count) {
-        getSession().execute("INSERT INTO top_ten_words (word_name, count)\n" +
-                " VALUES ('" + word + "', " + count + ");");
+        String title = "";
+        getSession().execute("INSERT INTO " + "top_ten_words (word_name, title, count)\n" +
+                " VALUES ('" + word + "', '" + title + "', " + count + ");");
     }
 
     /**

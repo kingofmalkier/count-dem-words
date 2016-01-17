@@ -5,7 +5,8 @@ CREATE TABLE total_word_counts(
 ); 
 
 CREATE TABLE top_ten_words(
-  count int,
-  word_name text,
-  PRIMARY KEY (word_name, count)
-) WITH CLUSTERING ORDER BY (count ASC);
+  title text,
+  PRIMARY KEY (title)
+);
+
+ALTER TABLE top_ten_words ADD counts map<text, int>
