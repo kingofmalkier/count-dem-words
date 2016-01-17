@@ -45,19 +45,23 @@ public class WordCount {
     }
 
     private long getCurrentCountForWord(String word) {
-        ResultSet results = getSession().execute("SELECT * FROM total_word_counts WHERE word_name='" + word + "';");
+        String title = GRAND_TOTAL;
+        ResultSet results = getSession().execute("SELECT * FROM total_word_counts WHERE word_name='" + word + "' AND " +
+                "title = '" + title + "';");
 
         for (Row row : results) {
-            return row.getLong("counter_value");
+            return row.getLong("counter_value"); //TODO: use one();
         }
 
         return 0;
     }
 
     private void incrementCountForWord(String word) {
+        String title = GRAND_TOTAL;
         getSession().execute("UPDATE total_word_counts\n" +
                 " SET counter_value = counter_value + 1\n" +
-                " WHERE word_name='" + word + "';");
+                " WHERE word_name='" + word + "' AND " +
+                "title = '" + title + "';");
     }
 
     private void updateTopTen(String word, long currentCount) {

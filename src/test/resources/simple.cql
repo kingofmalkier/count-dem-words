@@ -1,7 +1,8 @@
 CREATE TABLE total_word_counts(
   counter_value counter,
   word_name text,
-  PRIMARY KEY (word_name)
+  title text,
+  PRIMARY KEY (word_name, title)
 ); 
 
 CREATE TABLE top_ten_words(
