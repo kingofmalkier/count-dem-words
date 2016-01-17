@@ -49,8 +49,8 @@ public class WordCount {
         ResultSet results = getSession().execute("SELECT * FROM total_word_counts WHERE word_name='" + word + "' AND " +
                 "title = '" + title + "';");
 
-        for (Row row : results) {
-            return row.getLong("counter_value"); //TODO: use one();
+        if (!results.isExhausted()) {
+            return results.one().getLong("counter_value");
         }
 
         return 0;
