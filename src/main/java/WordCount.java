@@ -57,8 +57,7 @@ public class WordCount {
     private void incrementCountForWord(String word) {
         getSession().execute("UPDATE total_word_counts\n" +
                 " SET counter_value = counter_value + 1\n" +
-                " WHERE word_name='" + word + "';"); //TODO: Safe to hardcode 10 when dealing with topTen()?
-        //TODO: Why does that have LIMIT?
+                " WHERE word_name='" + word + "';");
     }
 
     private void updateTopTen(String word, long currentCount) {
@@ -71,16 +70,12 @@ public class WordCount {
             return;
         }
 
-        //TODO: Time to get our map, which is the actual count data, from there it may actually be sort of similar
-        //to the old implementation?
-
-        int numRowsInTopTen = 0;
         Map <String, Integer> countMap = results.one().getMap("counts", String.class, Integer.class);
 
-        String wordToReplace = findWordToReplace(word, currentCount);
+        String wordToReplace = findWordToReplace(countMap, word, currentCount);
 
         //If there are less than 10 in the top ten then we *are* adding
-        if (numRowsInTopTen < 10) {
+        if (countMap.size() < 10) {
             if (wordToReplace == null) {
                 addToTopTen(word, currentCount);
             } else if (wordToReplace.equals(word)) {
@@ -100,23 +95,19 @@ public class WordCount {
                 "  WHERE title = '" + title + "';");
     }
 
-    private String findWordToReplace(String word, long currentCount) {
+    private String findWordToReplace(Map<String, Integer> countMap, String word, long currentCount) {
         String wordToReplace = null;
-        ResultSet results = getSession().execute("SELECT * FROM top_ten_words WHERE count < " + currentCount + " ALLOW FILTERING;");
+        int lowestCount = Integer.MAX_VALUE;
 
-        for (Row row : results) {
-            String rowWord = row.getString("word_name");
-            if (word.equals(rowWord)) {
+        for (String mapWord : countMap.keySet()) {
+            if (word.equals(mapWord)) {
                 return word;
             }
 
-            int rowCount = row.getInt("count");
-            if (rowCount > currentCount) {
-                return wordToReplace;
-            }
-
-            if (wordToReplace == null && currentCount > rowCount) {
-                wordToReplace = rowWord;
+            int mapCount = countMap.get(mapWord);
+            if (mapCount < currentCount && mapCount < lowestCount) {
+                wordToReplace = mapWord;
+                lowestCount = mapCount;
             }
         }
 
@@ -124,16 +115,16 @@ public class WordCount {
     }
 
     private void replaceTopTen(String oldWord, String newWord, long count) {
-        String title = "";
-        getSession().execute("DELETE FROM top_ten_words where word_name = '" + oldWord + "' AND title = '" + title + "';");
+        String title = GRAND_TOTAL;
+        getSession().execute("DELETE counts['" + oldWord + "'] FROM top_ten_words WHERE title = '" + title + "';");
 
         addToTopTen(newWord, count);
     }
 
     private void addToTopTen(String word, long count) {
-        String title = "";
-        getSession().execute("INSERT INTO " + "top_ten_words (word_name, title, count)\n" +
-                " VALUES ('" + word + "', '" + title + "', " + count + ");");
+        String title = GRAND_TOTAL;
+        getSession().execute("UPDATE top_ten_words SET counts['" + word + "'] = " + count + "\n" +
+                "  WHERE title = '" + title + "';");
     }
 
     /**
@@ -144,19 +135,11 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords() {
-        Map<String, Integer> topTenMap = new HashMap<>();
+        String title = GRAND_TOTAL;
 
         //TODO: Hide the session detail at a minimum
-        ResultSet results = getSession().execute("SELECT * FROM top_ten_words");
-
-        for (Row row : results) {
-            String word = row.getString("word_name");
-            Integer count = row.getInt("count");
-
-            topTenMap.put(word, count);
-        }
-
-        return topTenMap;
+        Row result = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + title + "';").one();
+        return result.getMap("counts", String.class, Integer.class);
     }
 
     /**
