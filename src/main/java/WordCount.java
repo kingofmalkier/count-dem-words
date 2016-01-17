@@ -3,7 +3,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 
-import javax.print.DocFlavor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,16 +35,23 @@ public class WordCount {
 
     private void countWordsInLine(String bookTitle, String line) {
         for (String word : line.split(" ")) {
-            //TODO: Also need to increment the title-specific values
             //TODO: Strip off punctuation at front or end of word? 'cliff!' should count as 'cliff', yes?
-            long currentCount = getCurrentCountForWord(word);
-            incrementCountForWord(word);
-            updateTopTen(word, currentCount + 1L);
+            countWordForGrandTotal(word);
+            countWordForTitle(word, bookTitle);
         }
     }
 
-    private long getCurrentCountForWord(String word) {
-        String title = GRAND_TOTAL;
+    private void countWordForTitle(String word, String title) {
+        long currentCount = getCurrentCountForWord(word, title);
+        incrementCountForWord(word, title);
+        updateTopTen(word, currentCount + 1L, title);
+    }
+
+    private void countWordForGrandTotal(String word) {
+        countWordForTitle(word, GRAND_TOTAL);
+    }
+
+    private long getCurrentCountForWord(String word, String title) {
         ResultSet results = getSession().execute("SELECT * FROM total_word_counts WHERE word_name='" + word + "' AND " +
                 "title = '" + title + "';");
 
@@ -56,16 +62,14 @@ public class WordCount {
         return 0;
     }
 
-    private void incrementCountForWord(String word) {
-        String title = GRAND_TOTAL;
+    private void incrementCountForWord(String word, String title) {
         getSession().execute("UPDATE total_word_counts\n" +
                 " SET counter_value = counter_value + 1\n" +
                 " WHERE word_name='" + word + "' AND " +
                 "title = '" + title + "';");
     }
 
-    private void updateTopTen(String word, long currentCount) {
-        String title = GRAND_TOTAL;
+    private void updateTopTen(String word, long currentCount, String title) {
         ResultSet results = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + title + "';");
         if (results.isExhausted()) {
             //We don't have any entry yet for this title
@@ -81,14 +85,14 @@ public class WordCount {
         //If there are less than 10 in the top ten then we *are* adding
         if (countMap.size() < 10) {
             if (wordToReplace == null) {
-                addToTopTen(word, currentCount);
+                addToTopTen(word, currentCount, title);
             } else if (wordToReplace.equals(word)) {
-                replaceTopTen(wordToReplace, word, currentCount);
+                replaceTopTen(wordToReplace, word, currentCount, title);
             } else {
-                addToTopTen(word, currentCount);
+                addToTopTen(word, currentCount, title);
             }
         } else if (wordToReplace != null) {
-            replaceTopTen(wordToReplace, word, currentCount);
+            replaceTopTen(wordToReplace, word, currentCount, title);
         }
     }
 
@@ -118,15 +122,13 @@ public class WordCount {
         return wordToReplace;
     }
 
-    private void replaceTopTen(String oldWord, String newWord, long count) {
-        String title = GRAND_TOTAL;
+    private void replaceTopTen(String oldWord, String newWord, long count, String title) {
         getSession().execute("DELETE counts['" + oldWord + "'] FROM top_ten_words WHERE title = '" + title + "';");
 
-        addToTopTen(newWord, count);
+        addToTopTen(newWord, count, title);
     }
 
-    private void addToTopTen(String word, long count) {
-        String title = GRAND_TOTAL;
+    private void addToTopTen(String word, long count, String title) {
         getSession().execute("UPDATE top_ten_words SET counts['" + word + "'] = " + count + "\n" +
                 "  WHERE title = '" + title + "';");
     }
@@ -139,11 +141,7 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords() {
-        String title = GRAND_TOTAL;
-
-        //TODO: Hide the session detail at a minimum
-        Row result = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + title + "';").one();
-        return result.getMap("counts", String.class, Integer.class);
+        return topTenWords(GRAND_TOTAL);
     }
 
     /**
@@ -159,7 +157,9 @@ public class WordCount {
             throw new IllegalArgumentException("The book's title must be a non-empty String.");
         }
 
-        return new HashMap<>();
+        //TODO: Hide the session detail at a minimum
+        Row result = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + bookTitle + "';").one();
+        return result.getMap("counts", String.class, Integer.class);
     }
 
     private Session getSession() {
