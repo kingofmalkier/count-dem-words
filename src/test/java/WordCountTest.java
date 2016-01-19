@@ -78,7 +78,7 @@ public class WordCountTest {
 
         WordCount wc = new WordCount();
         wc.countWords("We Care", linesWeCareAbout);
-        wc.countWords("Do not Care", linesWeIgnore); //TODO: This title would be an issue as a contraction...
+        wc.countWords("Do not Care", linesWeIgnore);
 
         Integer coolCount = wc.topTenWords("We Care").get("cool");
         assertEquals(Integer.valueOf(2), coolCount);
