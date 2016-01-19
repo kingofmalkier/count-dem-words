@@ -1,28 +1,32 @@
-import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class WordCountPersistence {
     private Session session;
+    private PreparedStatement countForWord;
+    private PreparedStatement incrementCountForWord;
+    private PreparedStatement deleteWordFromTopTen;
+    private PreparedStatement topTenForTitle;
+    private PreparedStatement addToTopTen;
+    private PreparedStatement addNewTitleWithWordCount;
 
     public Map<String, Integer> getTopTenByTitle(String bookTitle) {
-        //TODO: Hide the session detail at a minimum
-        Row result = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + bookTitle + "';").one();
+        Row result = getSession().execute(topTenForTitle.bind(bookTitle)).one();
         return result.getMap("counts", String.class, Integer.class);
     }
 
-    public void replaceTopTen(String oldWord, String newWord, long count, String title) {
-        getSession().execute("DELETE counts['" + oldWord + "'] FROM top_ten_words WHERE title = '" + title + "';");
+    private void replaceTopTen(String oldWord, String newWord, int count, String title) {
+        getSession().execute(deleteWordFromTopTen.bind(oldWord, title));
 
         addToTopTen(newWord, count, title);
     }
 
     public long getCurrentCountForWord(String word, String title) {
-        ResultSet results = getSession().execute("SELECT * FROM total_word_counts WHERE word_name='" + word + "' AND " +
-                "title = '" + title + "';");
+        ResultSet results = getSession().execute(countForWord.bind(word, title));
 
         if (!results.isExhausted()) {
             return results.one().getLong("counter_value");
@@ -32,14 +36,11 @@ public class WordCountPersistence {
     }
 
     public void incrementCountForWord(String word, String title) {
-        getSession().execute("UPDATE total_word_counts\n" +
-                " SET counter_value = counter_value + 1\n" +
-                " WHERE word_name='" + word + "' AND " +
-                "title = '" + title + "';");
+        getSession().execute(incrementCountForWord.bind(word, title));
     }
 
-    public void updateTopTen(String word, long currentCount, String title) {
-        ResultSet results = getSession().execute("SELECT * FROM top_ten_words WHERE title='" + title + "';");
+    public void updateTopTen(String word, int currentCount, String title) {
+        ResultSet results = getSession().execute(topTenForTitle.bind(title));
         if (results.isExhausted()) {
             //We don't have any entry yet for this title
             //so we can just skip straight to creating an entry for this title/word
@@ -66,10 +67,9 @@ public class WordCountPersistence {
     }
 
     public void addNewTitleWithWordCount(String title, String word, long currentCount) {
-        getSession().execute("UPDATE top_ten_words\n" +
-                "  SET counts =\n" +
-                "  { '" + word + "' : " + currentCount + " }\n" +
-                "  WHERE title = '" + title + "';");
+        Map<String, Integer> countMap = new HashMap<>();
+        countMap.put(word, (int)currentCount);
+        getSession().execute(addNewTitleWithWordCount.bind(countMap, title));
     }
 
     private String findWordToReplace(Map<String, Integer> countMap, String word, long currentCount) {
@@ -91,14 +91,20 @@ public class WordCountPersistence {
         return wordToReplace;
     }
 
-    private void addToTopTen(String word, long count, String title) {
-        getSession().execute("UPDATE top_ten_words SET counts['" + word + "'] = " + count + "\n" +
-                "  WHERE title = '" + title + "';");
+    private void addToTopTen(String word, int count, String title) {
+        getSession().execute(addToTopTen.bind(word, count, title));
     }
 
     private Session getSession() {
         if (session == null) {
             session = connect("127.0.0.1");
+            countForWord = session.prepare("SELECT * FROM total_word_counts WHERE word_name = ? AND title = ?;");
+            incrementCountForWord = session.prepare("UPDATE total_word_counts SET counter_value = counter_value + 1 " +
+                    "WHERE word_name = ? AND  title = ?;");
+            deleteWordFromTopTen = session.prepare("DELETE counts[?] FROM top_ten_words WHERE title = ?;");
+            topTenForTitle = session.prepare("SELECT * FROM top_ten_words WHERE title = ?;");
+            addToTopTen = session.prepare("UPDATE top_ten_words SET counts[?] = ? WHERE title = ?;");
+            addNewTitleWithWordCount = session.prepare("UPDATE top_ten_words SET counts = ? WHERE title = ?;");
         }
 
         return session;

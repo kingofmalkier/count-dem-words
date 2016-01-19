@@ -72,7 +72,7 @@ public class WordCount {
     private void countWordForTitle(String word, String title) {
         long currentCount = persistence.getCurrentCountForWord(word, title);
         persistence.incrementCountForWord(word, title);
-        persistence.updateTopTen(word, currentCount + 1L, title);
+        persistence.updateTopTen(word, (int)currentCount + 1, title);
     }
 
     private void countWordForGrandTotal(String word) {

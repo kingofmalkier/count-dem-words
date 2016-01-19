@@ -5,6 +5,10 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -162,16 +166,18 @@ public class WordCountTest {
     @Test
     public void dangerousWords() {
         Vector<String> dangerousWords = new Vector<>();
-        //TODO: Move other punctuation into the middle of the words...
-        dangerousWords.add("We must flee; It's a trap!");
+        //Only punctuation in the middle of a word gets processed...
+        dangerousWords.add("We must fle;e It's a tra!p");
 
         WordCount wc = new WordCount();
         wc.countWords("Ackbar's Memoir", dangerousWords);
 
-        Map<String, Integer> topTen = wc.topTenWords();
+        Map<String, Integer> topTen = wc.topTenWords("Ackbar's Memoir");
 
         Integer itsCount = topTen.get("it's");
+        Integer traipCount = topTen.get("tra!p");
 
-        assertEquals(Integer.valueOf(2), itsCount);
+        assertEquals("'It's' count.", Integer.valueOf(1), itsCount);
+        assertEquals("'Traip' count.", Integer.valueOf(1), traipCount);
     }
 }
