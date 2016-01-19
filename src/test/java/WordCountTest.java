@@ -1,5 +1,6 @@
 import org.cassandraunit.CassandraCQLUnit;
 import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -183,6 +184,7 @@ public class WordCountTest {
         assertEquals("'Traip' count.", Integer.valueOf(1), traipCount);
     }
 
+    @Ignore("Turned off for speed. Took 280 seconds on my machine.")
     @Test
     public void largeBookTest() throws IOException, URISyntaxException {
         Path sherlockTextPath = Paths.get(WordCountTest.class.getResource("/sherlock.txt").toURI());

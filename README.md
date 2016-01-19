@@ -1,29 +1,20 @@
 # count-dem-words
 
-Assumptions:
-* We don't care about capitilization of the words
-* A "contender" must surpass the count of an existing top-ten word to make the top-ten
-* Loading datasets for unit tests could make the test more isolated, but makes tests more fragile regarding changes to data format
-* Currently each test in WordCountTest runs with Cassandra, this could be changed for speed but for ease-of-code-review's sake I will leave it
+Assumptions made that will be reflected in the implementation:
+* WordCount was implemented to meet the API and all "driving" is done via the unit tests. I did not implement any sort of application or front-end around it.
+* The difference between "Into" and "into" is irrelevant, and thus all words are lower-cased.
+* When updating the current Top Ten, a "contender" must surpass the count of an existing top-ten word. Ties go to the incumbent.
+* No jazzy character encodings
+* Trailing punctuation on a word is ignored, so "ejected!" counts as "ejected".
+* "Words" consisting entirely of punctuation are not counted.
+* Words that contain punctuation are treated as interesting words. "Blue-footed" is not broken up into "blue" and "footed".
+* Reading any particular top ten should be as close to instantaneous as possible. Processing lines should be the time-intensive operation.
+* The code is generally quite optimistic regarding Cassandra's availability and the success of its various queries. A lot more error-checking and logging could be done if so desired.
 
-Design to implement:
-* Track word counts by title and across titles separately
-** Slightly more work to count words
-** Removes need to perform potentially very large operations for any topTenWords call
-** Appears to be the nicer thing to do to Cassandra
+Testing notes:
+* Currently each test in WordCountTest runs with a freshly cleaned Cassandra, this could be changed to speed up tests that are never designed to make actual calls to Cassandra.
 
-Example 3 from here: http://www.datastax.com/dev/blog/basic-rules-of-cassandra-data-modeling seems very relevant.
-If we replace the joined date with count and do the same ORDER BY (blah DESC) then we can query with a LIMIT of ten to easily get our top ten.
+To run the tests run the following from the top level of the repo:
+./gradlew test
 
-oh ho! Counters! https://docs.datastax.com/en/cql/3.1/cql/cql_using/use_counter_t.html
-
-if we have a table:
-
-pos|word|count
-
-We can have position be the primary key so that we can actually mutate the word and count (necessary? update may be able to change all values). Then whenever we update a word's count we also read the count and consider it good enough for ranking. (The increment function should ensure that we keep the correct total, even if our ranking isn't always using the most up-to-date value.) Then we go through the current top-ten table. If we find a row where our current count is bigger, we update that row to have our word and count values. When we want the top ten we just grab that table. The main con here is that we do a lot of reads just to write one word. The main pro is that when we want our top ten it's super-duper fast. This may be acceptable since presumably getting the top ten is the single most time sensitive operation. Hell, in many instances you could probably cache the top ten results for at least a minute or something and therefore basically the only reads are the ones done while counting/processing.
-
-If there are less than 10 numbers, we are either adding a new row or replacing ourselves
-If there are 10 numbers, we are either replacing the lowest or replacing ourselves
-
-When determining the replacement we only need to see numbers smaller than our replacement count; this will even find ourselves if relevant.
+This should automatically download gradle and run the tests with it. You should just need JAVA_HOME set to a valid java installation.
