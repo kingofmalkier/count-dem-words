@@ -60,7 +60,10 @@ public class WordCount {
 
     private void countWordsInLine(String bookTitle, String line) {
         for (String word : line.split(" ")) {
-            //TODO: Strip off punctuation at front or end of word? 'cliff!' should count as 'cliff', yes?
+            word = word.replaceAll("[^a-zA-Z]+$", "");
+            if (word.isEmpty()) {
+                continue;
+            }
             countWordForGrandTotal(word);
             countWordForTitle(word, bookTitle);
         }

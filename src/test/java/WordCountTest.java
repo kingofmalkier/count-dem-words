@@ -106,4 +106,72 @@ public class WordCountTest {
         exceptionRule.expect(IllegalArgumentException.class);
         new WordCount().topTenWords("");
     }
+
+    @Test
+    public void asynchronousCounting() throws InterruptedException {
+        AsyncWordCounter asyncCounter = new AsyncWordCounter();
+        Thread asyncThread = new Thread(asyncCounter);
+        asyncThread.start();
+        Thread.sleep(500);
+
+        WordCount wc = new WordCount();
+        Integer threadingCount = wc.topTenWords().get("threading");
+        assertEquals(Integer.valueOf(1), threadingCount);
+
+        asyncCounter.continueCounting = true;
+        asyncThread.join();
+
+        threadingCount = wc.topTenWords().get("threading");
+        Integer codeCount = wc.topTenWords().get("code");
+
+        assertEquals("Times we counted 'threading'", Integer.valueOf(2), threadingCount);
+        assertEquals("Times we counted 'code'", Integer.valueOf(2), codeCount);
+    }
+
+    @Test
+    public void trailingPunctuation() {
+        Vector<String> punctuatedWords = new Vector<>();
+        punctuatedWords.add("This is obvious but do we count THIS? And this; or even this!");
+
+        WordCount wc = new WordCount();
+        wc.countWords("Trivial", punctuatedWords);
+
+        Map<String, Integer> topTen = wc.topTenWords();
+
+        Integer thisCount = topTen.get("this");
+
+        assertEquals("'This' count with punctuation.", Integer.valueOf(4), thisCount);
+    }
+
+    @Test
+    public void infixPunctuation() {
+        Vector<String> punctuatedWords = new Vector<>();
+        punctuatedWords.add("It's timey-wimey?");
+        punctuatedWords.add("Yes. Timey-wimey, wibbly-wobbly.");
+
+        WordCount wc = new WordCount();
+        wc.countWords("Infix", punctuatedWords);
+
+        Map<String, Integer> topTen = wc.topTenWords();
+
+        Integer twCount = topTen.get("timey-wimey");
+
+        assertEquals(Integer.valueOf(2), twCount);
+    }
+
+    @Test
+    public void dangerousWords() {
+        Vector<String> dangerousWords = new Vector<>();
+        //TODO: Move other punctuation into the middle of the words...
+        dangerousWords.add("We must flee; It's a trap!");
+
+        WordCount wc = new WordCount();
+        wc.countWords("Ackbar's Memoir", dangerousWords);
+
+        Map<String, Integer> topTen = wc.topTenWords();
+
+        Integer itsCount = topTen.get("it's");
+
+        assertEquals(Integer.valueOf(2), itsCount);
+    }
 }
