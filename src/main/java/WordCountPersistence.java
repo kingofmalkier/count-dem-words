@@ -23,11 +23,11 @@ public class WordCountPersistence {
         addToTopTen(newWord, count, title);
     }
 
-    public long getCurrentCountForWord(String word, String title) {
+    public int getCurrentCountForWord(String word, String title) {
         ResultSet results = getSession().execute(countForWord.bind(word, title));
 
         if (!results.isExhausted()) {
-            return results.one().getLong("counter_value");
+            return (int)results.one().getLong("counter_value");
         }
 
         return 0;
@@ -64,13 +64,13 @@ public class WordCountPersistence {
         }
     }
 
-    public void addNewTitleWithWordCount(String title, String word, long currentCount) {
+    public void addNewTitleWithWordCount(String title, String word, int currentCount) {
         Map<String, Integer> countMap = new HashMap<>();
-        countMap.put(word, (int)currentCount);
+        countMap.put(word, currentCount);
         getSession().execute(addNewTitleWithWordCount.bind(countMap, title));
     }
 
-    private String findWordToReplace(Map<String, Integer> countMap, String word, long currentCount) {
+    private String findWordToReplace(Map<String, Integer> countMap, String word, int currentCount) {
         String wordToReplace = null;
         int lowestCount = Integer.MAX_VALUE;
 
