@@ -109,8 +109,9 @@ public class WordCountPersistence {
     }
 
     private Session connect(String node) {
+        //Should pull these values from a properties file (Spring, etc.) in a full-app scenario
         return Cluster.builder()
                 .addContactPoint(node).withPort(9142)
-                .build().connect("wordsKS"); //Could pull this from a properties file in a full-app scenario
+                .build().connect("wordsKS");
     }
 }
