@@ -1,6 +1,4 @@
 import com.datastax.driver.core.*;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 
 import java.util.HashMap;
 import java.util.Map;
