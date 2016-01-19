@@ -5,9 +5,12 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -179,5 +182,18 @@ public class WordCountTest {
 
         assertEquals("'It's' count.", Integer.valueOf(1), itsCount);
         assertEquals("'Traip' count.", Integer.valueOf(1), traipCount);
+    }
+
+    @Test
+    public void largeBookTest() throws IOException, URISyntaxException {
+        Path sherlockTextPath = Paths.get(WordCountTest.class.getResource("/sherlock.txt").toURI());
+        List<String> list = Files.readAllLines(sherlockTextPath, StandardCharsets.UTF_8);
+
+        WordCount wc = new WordCount();
+        wc.countWords("Sherlock Compilation", list);
+
+        Map<String, Integer> topTen = wc.topTenWords();
+
+        assertEquals("Probably at least ten words in all of Sherlock.", 10, topTen.size());
     }
 }
