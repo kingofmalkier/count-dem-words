@@ -9,6 +9,7 @@ Assumptions made that will be reflected in the implementation:
 * "Words" consisting entirely of punctuation are not counted.
 * Words that contain punctuation are treated as interesting words. "Blue-footed" is not broken up into "blue" and "footed".
 * Reading any particular top ten should be as close to instantaneous as possible. Processing lines should be the time-intensive operation.
+* Any failures in WordCount should be essentially hidden from its caller. Failures should be logged and empty return values returned.
 * The code is generally quite optimistic regarding Cassandra's availability and the success of its various queries. A lot more error-checking and logging could be done if so desired.
 
 Testing notes:

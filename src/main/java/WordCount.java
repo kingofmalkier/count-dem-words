@@ -1,3 +1,7 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -6,6 +10,7 @@ import java.util.Map;
 public class WordCount {
     private static final String GRAND_TOTAL = "----grand-total----";
     private WordCountPersistence persistence;
+    private static Logger logger = LoggerFactory.getLogger(WordCount.class);
 
     public WordCount() {
         persistence = new WordCountPersistence();
@@ -31,11 +36,21 @@ public class WordCount {
      *         null, but possibly empty.
      */
     public Map<String, Integer> topTenWords(String bookTitle) {
-        if (bookTitle == null || bookTitle.isEmpty()) {
-            throw new IllegalArgumentException("The book's title must be a non-empty String.");
+        Map<String, Integer> topTen = new HashMap<>();
+
+        if (bookTitle == null) {
+            logger.error("The book's title must be a non-empty String, it was null.");
+        } else if(bookTitle.isEmpty()) {
+            logger.error("The book's title must be a non-empty String, it was empty.");
+        } else {
+            try {
+                topTen = persistence.getTopTenByTitle(bookTitle);
+            } catch (Exception e) {
+                logger.error("Failure retrieving top ten for " + bookTitle, e);
+            }
         }
 
-        return persistence.getTopTenByTitle(bookTitle);
+        return topTen;
     }
 
     /**
@@ -45,16 +60,25 @@ public class WordCount {
      * @param lines     The book's text. Must not be null.
      */
     public void countWords(String bookTitle, Iterable<String> lines) {
-        if (bookTitle == null || bookTitle.isEmpty()) {
-            throw new IllegalArgumentException("The book's title must be a non-empty String.");
+        if (bookTitle == null) {
+            logger.error("The book's title must not be null.");
+            return;
+        } else if (bookTitle.isEmpty()){
+            logger.error("The book's title must not be empty.");
+            return;
         }
 
         if (lines == null) {
-            throw new IllegalArgumentException("Lines must not be null.");
+            logger.error("Lines must not be null.");
+            return;
         }
 
-        for (String line : lines) {
-            countWordsInLine(bookTitle, line.toLowerCase());
+        try {
+            for (String line : lines) {
+                countWordsInLine(bookTitle, line.toLowerCase());
+            }
+        } catch (Exception e) {
+            logger.error("Failure to count words for " + bookTitle, e);
         }
     }
 
