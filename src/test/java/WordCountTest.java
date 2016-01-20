@@ -3,7 +3,6 @@ import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -18,9 +17,6 @@ import java.util.Vector;
 import static org.junit.Assert.assertEquals;
 
 public class WordCountTest {
-    @Rule
-    public final ExpectedException exceptionRule = ExpectedException.none();
-
     @Rule
     public CassandraCQLUnit cassandraCQLUnit = new CassandraCQLUnit(new ClassPathCQLDataSet("simple.cql","wordsKS"));
 
@@ -86,32 +82,41 @@ public class WordCountTest {
 
     @Test
     public void countNullTitle() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        new WordCount().countWords(null, new Vector<String>());
+        WordCount wc = new WordCount();
+        wc.countWords(null, new Vector<String>());
+
+        Map<String, Integer> topTen = wc.topTenWords();
+        assertEquals(0, topTen.size());
     }
 
     @Test
     public void countEmptyTitle() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        new WordCount().countWords("", new Vector<String>());
+        WordCount wc = new WordCount();
+        wc.countWords("", new Vector<String>());
+
+        Map<String, Integer> topTen = wc.topTenWords();
+        assertEquals(0, topTen.size());
     }
 
     @Test
     public void countNullLines() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        new WordCount().countWords("Neat Title", null);
+        WordCount wc = new WordCount();
+        wc.countWords("Neat Title", null);
+
+        Map<String, Integer> topTen = wc.topTenWords();
+        assertEquals(0, topTen.size());
     }
 
     @Test
     public void topTenNullTitle() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        new WordCount().topTenWords(null);
+        Map<String, Integer> topTen = new WordCount().topTenWords(null);
+        assertEquals(0, topTen.size());
     }
 
     @Test
     public void topTenEmptyTitle() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        new WordCount().topTenWords("");
+        Map<String, Integer> topTen = new WordCount().topTenWords("");
+        assertEquals(0, topTen.size());
     }
 
     @Test
